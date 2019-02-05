@@ -5,5 +5,3 @@ mv *.java ./Classes
 javac -d bin ./Classes/*.java
 cd bin
 java Simple1
-
-rm *.class

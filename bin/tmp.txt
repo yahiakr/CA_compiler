@@ -1,0 +1,24 @@
+;
+{
+    {
+        Dbclick(Plan);
+        {
+            Click(Plan)~
+            {
+                Click(plan);
+                Click(plan)
+            }
+        }
+    } +
+    {
+        Click(Plan);
+        Dbclick(Plan);
+        {
+            Click(Plan);
+            {
+                Click(plan);
+                Click(plan)
+            }
+        }
+    }
+}

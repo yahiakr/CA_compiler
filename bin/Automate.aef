@@ -1,8 +1,39 @@
-Etat(1) : Click(2), Dbclick(0), Drag(0)
-Etat(2) : Click(0), Dbclick(0), Drag(4)
-Etat(4) : Click(18), Dbclick(8), Drag(0)
-Etat(8) : Click(10), Dbclick(0), Drag(0)
-Etat(10) : Click(0), Dbclick(0), Drag(12)
-Etat(12) : Click(0), Dbclick(0), Drag(0)
-Etat(18) : Click(0), Dbclick(0), Drag(20)
-Etat(20) : Click(0), Dbclick(0), Drag(0)
+
+Etat(1) : 
+	Click
+		plan --> 2
+
+Etat(2) : 
+	Drag
+		plan --> 4
+
+Etat(4) : 
+	DbClick
+		Plan --> 22
+		Plan --> 8
+
+Etat(8) : 
+	Click
+		BtProjection --> 10
+		Commande --> 12
+
+Etat(10) : 
+
+Etat(12) : 
+	Click
+		Projection --> 10
+
+Etat(22) : 
+	DbClick
+		Plan --> 24
+
+Etat(24) : 
+	Click
+		BtDistance --> 26
+		Commande --> 28
+
+Etat(26) : 
+
+Etat(28) : 
+	Click
+		Distance --> 26

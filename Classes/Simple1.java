@@ -19,34 +19,59 @@ class Etat {
   }
 }
 
+class Next {
+  public HashMap<Integer, String> next ;
+
+  public Next(){
+    this.next = new HashMap<Integer, String>();
+  }
+}
+
 class Manager {
-  public static int[][] tab = new int[70][8];
+  public static Next[][] tab = new Next[70][8];
   public static HashMap<String, String> Comps = new HashMap<String, String>();
 
-  public void add(int i,int j,String e){
-    this.tab[i][7] = 1 ;
-    this.tab[j][7] = 1 ;
+  public void Init(){
+    for (int i = 0; i < 70; i++) {
+      for (int m = 0; m < 8; m++) {
+        this.tab[i][m] = new Next();
+      }
+    }
+  }
+
+  public static String mapToString(int i,int j){
+    String s="";
+    for (int name: tab[i][j].next.keySet()){
+      s+="\u005ct\u005ct"+tab[i][j].next.get(name).toString()+" --> ";
+      s+=name+"\u005cn";
+    }
+    return s;
+  }
+
+  public void add(int i,int j,String e,String to){
+    this.tab[i][7].next.put(1,"$");
+    this.tab[j][7].next.put(1,"$");
     switch (e) {
       case "Click":
-        this.tab[i][0] = j ;
+        this.tab[i][0].next.put(j,to);
         break;
       case "Dbclick":
-        this.tab[i][1] = j ;
+        this.tab[i][1].next.put(j,to);
         break;
       case "ChrKeyPress":
-        this.tab[i][2] = j ;
+        this.tab[i][2].next.put(j,to);
         break;
       case "NumKeyPress":
-        this.tab[i][3] = j ;
+        this.tab[i][3].next.put(j,to);
         break;
       case "EntrerKeyPress":
-        this.tab[i][4] = j ;
+        this.tab[i][4].next.put(j,to);
         break;
       case "Drag":
-        this.tab[i][5] = j ;
+        this.tab[i][5].next.put(j,to);
         break;
       case "Drop":
-        this.tab[i][6] = j ;
+        this.tab[i][6].next.put(j,to);
         break;
 
       default:
@@ -58,20 +83,32 @@ class Manager {
 
     // copy
     for (int i = 0; i < 7; i++) {
-      if (this.tab[j][i]==0 && this.tab[k][i]!=0) {
-        this.tab[j][i] = this.tab[k][i];
+      // if (this.tab[j][i]==0 && this.tab[k][i]!=0) {
+      //   this.tab[j][i] = this.tab[k][i];
+      // }
+      for (int name: this.tab[k][i].next.keySet()){
+        // String key =name.toString();
+        String value = this.tab[k][i].next.get(name).toString();
+        this.tab[j][i].next.put(name,value);
       }
     }
+
     // update
     for (int i = 0; i < 70; i++) {
       for (int m = 0; m < 7; m++) {
-        if (this.tab[i][m] == k) {
-          this.tab[i][m] = j ;
+        for (int key: this.tab[i][m].next.keySet()){
+          // String key =name.toString();
+          String value = this.tab[i][m].next.get(key).toString();
+          if (key == k) {
+            this.tab[i][m].next.remove(k);
+            this.tab[i][m].next.put(j,value);
+          }
         }
       }
     }
 
-    this.tab[k][7] = 0 ;
+    this.tab[k][7].next.remove(1);
+    this.tab[k][7].next.put(0,"$");
   }
 }
 
@@ -80,6 +117,9 @@ class Simple1 implements Simple1Constants {
 
 
   public static void main(String args[]) throws ParseException, FileNotFoundException {
+
+    Manager m = new Manager();
+    m.Init();
 
     try {
       Simple1 parser = new Simple1(new FileInputStream("Prog.ihm"));
@@ -91,8 +131,41 @@ class Simple1 implements Simple1Constants {
         PrintWriter pr = new PrintWriter("Automate.aef");
 
         for (int i = 1; i < 70; i++) {
-          if (Manager.tab[i][7] == 1) {
-            pr.println("Etat("+i+") : Click("+Manager.tab[i][0]+"), Dbclick("+Manager.tab[i][1]+"), Drag("+Manager.tab[i][5]+")");
+          if (Manager.tab[i][7].next.get(1) != null) {
+            pr.println("\u005cnEtat("+i+") : ");
+            for(int j=0;j<7;j++){
+              String s="";
+              switch (j) {
+                case 0:
+                  s="Click";
+                  break;
+                case 1:
+                  s="DbClick";
+                  break;
+                case 2:
+                  s="ChrKeyPress";
+                  break;
+                case 3:
+                  s="NumKeyPress";
+                  break;
+                case 4:
+                  s="EntrerKeyPress";
+                  break;
+                case 5:
+                  s="Drag";
+                  break;
+                case 6:
+                  s="Drop";
+                  break;
+
+                default:
+                  break;
+              }
+              if(Manager.mapToString(i,j).equals("")==false){
+                pr.print("\u005ct"+s+"\u005cn");
+                pr.print(Manager.mapToString(i,j));
+              }
+            }
           }
         }
 
@@ -107,11 +180,14 @@ class Simple1 implements Simple1Constants {
     try
     {
         PrintWriter pr = new PrintWriter("Composants.gui");
-
+        pr.printf("\u005cn%-25s | %-125s |","Composant (Type)","Attributs");
+        pr.printf("\u005cn-----------------------------------------------------------------------------------------------------------------------------------------------------------");
         for (String name: Manager.Comps.keySet()){
           String key =name.toString();
           String value = Manager.Comps.get(name).toString();
-          pr.println(key + ": " + value);
+          //pr.println(key + ": " + value);  
+          pr.printf("\u005cn%-25s | %-125s |",key,value,"|");
+          pr.printf("\u005cn-----------------------------------------------------------------------------------------------------------------------------------------------------------");
         }
 
         pr.close();
@@ -128,6 +204,7 @@ class Simple1 implements Simple1Constants {
   String[] Types = new String[5];
   int i = 0;
   String prop = "";
+  String ty = "";
     jj_consume_token(KWDEBUT);
     jj_consume_token(KWINTER);
     label_1:
@@ -145,6 +222,16 @@ class Simple1 implements Simple1Constants {
       id = jj_consume_token(ID);
       jj_consume_token(KWTWOP);
       type = jj_consume_token(TYPE);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 26:
+        jj_consume_token(26);
+        jj_consume_token(ID);
+        jj_consume_token(27);
+        break;
+      default:
+        jj_la1[1] = jj_gen;
+        ;
+      }
       jj_consume_token(KWPV);
       jj_consume_token(KWPROP);
       label_2:
@@ -154,44 +241,147 @@ class Simple1 implements Simple1Constants {
           ;
           break;
         default:
-          jj_la1[1] = jj_gen;
+          jj_la1[2] = jj_gen;
           break label_2;
         }
         p = jj_consume_token(ID);
+                  prop += p.image;
+        label_3:
+        while (true) {
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case 28:
+            ;
+            break;
+          default:
+            jj_la1[3] = jj_gen;
+            break label_3;
+          }
+          jj_consume_token(28);
+          p = jj_consume_token(ID);
+                    prop += ", "+p.image;
+        }
         jj_consume_token(KWTWOP);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PROPTYPE:
           t = jj_consume_token(PROPTYPE);
+                       ty += t.image;
           break;
-        case 20:
-          jj_consume_token(20);
+        case 29:
+          jj_consume_token(29);
           t = jj_consume_token(ID);
-          label_3:
+                    ty += "{" + t.image;
+          label_4:
           while (true) {
             switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-            case 21:
+            case 28:
               ;
               break;
             default:
-              jj_la1[2] = jj_gen;
-              break label_3;
+              jj_la1[4] = jj_gen;
+              break label_4;
             }
-            jj_consume_token(21);
-            jj_consume_token(ID);
+            jj_consume_token(28);
+            t = jj_consume_token(ID);
+                                                         ty += "," + t.image;
           }
-          jj_consume_token(22);
+          jj_consume_token(30);
+                                                                                       ty+="}";
           break;
         default:
-          jj_la1[3] = jj_gen;
+          jj_la1[5] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         jj_consume_token(KWPV);
-         prop += p.image + ": "+ t.image +" ; ";
+         prop += ": "+ ty +"; ";
+         ty = "";
       }
       jj_consume_token(KWEVT);
+      label_5:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case EVENT:
+          ;
+          break;
+        default:
+          jj_la1[6] = jj_gen;
+          break label_5;
+        }
+        jj_consume_token(EVENT);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case 26:
+          jj_consume_token(26);
+          jj_consume_token(ID);
+          jj_consume_token(27);
+          break;
+        default:
+          jj_la1[7] = jj_gen;
+          ;
+        }
+        jj_consume_token(29);
+        label_6:
+        while (true) {
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case KWIF:
+          case AFFECT:
+            ;
+            break;
+          default:
+            jj_la1[8] = jj_gen;
+            break label_6;
+          }
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case KWIF:
+            jj_consume_token(KWIF);
+            jj_consume_token(COND);
+            jj_consume_token(KWTHEN);
+            jj_consume_token(AFFECT);
+            break;
+          case AFFECT:
+            jj_consume_token(AFFECT);
+            break;
+          default:
+            jj_la1[9] = jj_gen;
+            jj_consume_token(-1);
+            throw new ParseException();
+          }
+        }
+        label_7:
+        while (true) {
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case KWPV:
+            ;
+            break;
+          default:
+            jj_la1[10] = jj_gen;
+            break label_7;
+          }
+          jj_consume_token(KWPV);
+          jj_consume_token(AFFECT);
+        }
+        jj_consume_token(30);
+      }
      prop += "]";
      Manager.Comps.put(id.image+" ("+type.image+")", prop);
+     prop = "";
+    }
+    jj_consume_token(KWINIT);
+    label_8:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case ID:
+        ;
+        break;
+      default:
+        jj_la1[11] = jj_gen;
+        break label_8;
+      }
+      jj_consume_token(ID);
+      jj_consume_token(31);
+      jj_consume_token(ID);
+      jj_consume_token(32);
+      jj_consume_token(ID);
+      jj_consume_token(KWPV);
     }
     jj_consume_token(KWACT);
     A();
@@ -203,19 +393,19 @@ class Simple1 implements Simple1Constants {
   Automate a;
   Token id;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 20:
-      jj_consume_token(20);
+    case 29:
+      jj_consume_token(29);
       a = A();
-      jj_consume_token(22);
+      jj_consume_token(30);
       Y(a);
                       {if (true) return a;}
       break;
-    case ID:
+    case EVENT:
       a = Event();
                {if (true) return a;}
       break;
     default:
-      jj_la1[4] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -224,14 +414,15 @@ class Simple1 implements Simple1Constants {
 
   static final public Automate Event() throws ParseException {
   Automate a1;
-  Token id;
+  Token event;
+  Token comp;
   Manager m = new Manager();
    a1=new Automate();
-    id = jj_consume_token(ID);
-    jj_consume_token(23);
-    jj_consume_token(ID);
-    jj_consume_token(24);
-   m.add(a1.first.id , a1.last.id , id.image);
+    event = jj_consume_token(EVENT);
+    jj_consume_token(26);
+    comp = jj_consume_token(ID);
+    jj_consume_token(27);
+   m.add(a1.first.id , a1.last.id , event.image, comp.image );
     Y(a1);
    {if (true) return a1;}
     throw new Error("Missing return statement in function");
@@ -275,18 +466,18 @@ class Simple1 implements Simple1Constants {
       Y(tmp);
       break;
     default:
-      jj_la1[6] = jj_gen;
-      label_4:
+      jj_la1[14] = jj_gen;
+      label_9:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 25:
+        case 33:
           ;
           break;
         default:
-          jj_la1[5] = jj_gen;
-          break label_4;
+          jj_la1[13] = jj_gen;
+          break label_9;
         }
-        jj_consume_token(25);
+        jj_consume_token(33);
       }
     }
   }
@@ -301,13 +492,18 @@ class Simple1 implements Simple1Constants {
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[7];
+  static final private int[] jj_la1 = new int[15];
   static private int[] jj_la1_0;
+  static private int[] jj_la1_1;
   static {
       jj_la1_init_0();
+      jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x80,0x80000,0x200000,0x140000,0x180000,0x2000000,0x1a000,};
+      jj_la1_0 = new int[] {0x80,0x4000000,0x400000,0x10000000,0x10000000,0x20100000,0x200000,0x4000000,0x2001000,0x2001000,0x8000,0x400000,0x20200000,0x0,0x68000,};
+   }
+   private static void jj_la1_init_1() {
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -328,7 +524,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -342,7 +538,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -359,7 +555,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -369,7 +565,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -385,7 +581,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -394,7 +590,7 @@ class Simple1 implements Simple1Constants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 7; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 15; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -445,21 +641,24 @@ class Simple1 implements Simple1Constants {
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[26];
+    boolean[] la1tokens = new boolean[34];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 15; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
             la1tokens[j] = true;
           }
+          if ((jj_la1_1[i] & (1<<j)) != 0) {
+            la1tokens[32+j] = true;
+          }
         }
       }
     }
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 34; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

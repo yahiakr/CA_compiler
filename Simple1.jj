@@ -26,34 +26,59 @@ class Etat {
   }
 }
 
+class Next {
+  public HashMap<Integer, String> next ;
+
+  public Next(){
+    this.next = new HashMap<Integer, String>();
+  }
+}
+
 class Manager {
-  public static int[][] tab = new int[70][8];
+  public static Next[][] tab = new Next[70][8];
   public static HashMap<String, String> Comps = new HashMap<String, String>();
 
-  public void add(int i,int j,String e){
-    this.tab[i][7] = 1 ;
-    this.tab[j][7] = 1 ;
+  public void Init(){
+    for (int i = 0; i < 70; i++) {
+      for (int m = 0; m < 8; m++) {
+        this.tab[i][m] = new Next();
+      }
+    }
+  }
+
+  public static String mapToString(int i,int j){
+    String s="";
+    for (int name: tab[i][j].next.keySet()){
+      s+="\t\t"+tab[i][j].next.get(name).toString()+" --> ";
+      s+=name+"\n";
+    }
+    return s;
+  }
+
+  public void add(int i,int j,String e,String to){
+    this.tab[i][7].next.put(1,"$");
+    this.tab[j][7].next.put(1,"$");
     switch (e) {
       case "Click":
-        this.tab[i][0] = j ;
+        this.tab[i][0].next.put(j,to);
         break;
       case "Dbclick":
-        this.tab[i][1] = j ;
+        this.tab[i][1].next.put(j,to);
         break;
       case "ChrKeyPress":
-        this.tab[i][2] = j ;
+        this.tab[i][2].next.put(j,to);
         break;
       case "NumKeyPress":
-        this.tab[i][3] = j ;
+        this.tab[i][3].next.put(j,to);
         break;
       case "EntrerKeyPress":
-        this.tab[i][4] = j ;
+        this.tab[i][4].next.put(j,to);
         break;
       case "Drag":
-        this.tab[i][5] = j ;
+        this.tab[i][5].next.put(j,to);
         break;
       case "Drop":
-        this.tab[i][6] = j ;
+        this.tab[i][6].next.put(j,to);
         break;
 
       default:
@@ -65,20 +90,32 @@ class Manager {
 
     // copy
     for (int i = 0; i < 7; i++) {
-      if (this.tab[j][i]==0 && this.tab[k][i]!=0) {
-        this.tab[j][i] = this.tab[k][i];
-      }
+      // if (this.tab[j][i]==0 && this.tab[k][i]!=0) {
+      //   this.tab[j][i] = this.tab[k][i];
+      // }
+      for (int name: this.tab[k][i].next.keySet()){
+        // String key =name.toString();
+        String value = this.tab[k][i].next.get(name).toString();  
+        this.tab[j][i].next.put(name,value);
+      } 
     }
+    
     // update
     for (int i = 0; i < 70; i++) {
       for (int m = 0; m < 7; m++) {
-        if (this.tab[i][m] == k) {
-          this.tab[i][m] = j ;
+        for (int key: this.tab[i][m].next.keySet()){
+          // String key =name.toString();
+          String value = this.tab[i][m].next.get(key).toString();  
+          if (key == k) {
+            this.tab[i][m].next.remove(k);
+            this.tab[i][m].next.put(j,value);
+          }
         }
       }
     }
 
-    this.tab[k][7] = 0 ;
+    this.tab[k][7].next.remove(1);
+    this.tab[k][7].next.put(0,"$");
   }
 }
 
@@ -88,6 +125,9 @@ class Simple1 {
   
   public static void main(String args[]) throws ParseException, FileNotFoundException {
     
+    Manager m = new Manager();
+    m.Init();
+    
     try {
       Simple1 parser = new Simple1(new FileInputStream("Prog.ihm"));
       parser.Input();
@@ -95,11 +135,44 @@ class Simple1 {
 
     try
     {
-        PrintWriter pr = new PrintWriter("Automate.aef");    
+        PrintWriter pr = new PrintWriter("Automate.aef");
 
         for (int i = 1; i < 70; i++) {
-          if (Manager.tab[i][7] == 1) {
-            pr.println("Etat("+i+") : Click("+Manager.tab[i][0]+"), Dbclick("+Manager.tab[i][1]+"), Drag("+Manager.tab[i][5]+")");
+          if (Manager.tab[i][7].next.get(1) != null) {
+            pr.println("\nEtat("+i+") : ");
+            for(int j=0;j<7;j++){
+              String s="";
+              switch (j) {
+                case 0:
+                  s="Click";
+                  break;
+                case 1:
+                  s="DbClick";
+                  break;
+                case 2:
+                  s="ChrKeyPress";
+                  break;
+                case 3:
+                  s="NumKeyPress";
+                  break;
+                case 4:
+                  s="EntrerKeyPress";
+                  break;
+                case 5:
+                  s="Drag";
+                  break;
+                case 6:
+                  s="Drop";
+                  break;
+          
+                default:
+                  break;
+              }
+              if(Manager.mapToString(i,j).equals("")==false){
+                pr.print("\t"+s+"\n");
+                pr.print(Manager.mapToString(i,j));
+              }
+            }
           }
         }
 
@@ -114,11 +187,14 @@ class Simple1 {
     try
     {
         PrintWriter pr = new PrintWriter("Composants.gui"); 
-
+        pr.printf("\n%-25s | %-125s |","Composant (Type)","Attributs");
+        pr.printf("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------");
         for (String name: Manager.Comps.keySet()){
           String key =name.toString();
           String value = Manager.Comps.get(name).toString();  
-          pr.println(key + ": " + value);  
+          //pr.println(key + ": " + value);  
+          pr.printf("\n%-25s | %-125s |",key,value,"|");
+          pr.printf("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------");
         } 
 
         pr.close();
@@ -147,21 +223,27 @@ TOKEN :
   <KWDEBUT: "DEBUT">
 | <KWINTER: "INTERFACE">
 | <KWCOMP: "COMP">
-| <KWINIT: "INITIALISATION">
+| <KWINIT: "INITIALISATIONS">
 | <KWACT: "ACTIONS">
 | <KWEVT: "EVT">
 | <KWPROP: "PROP">
+| <KWIF: "if" | "If">
+| <KWTHEN: "Then" | "then">
 
 | <KWTWOP: ":">
 | <KWPV: ";">
 | <KWEQU: "=">
 
 | <ALTERNATIVE: "+">
-| <CHOIX: "$">
+| <CHOIX: "~">
 
-| <TYPE: "Fenetre" | "Menu" | "Caneva" | "Bouton" | "Bouton">
-| <PROPTYPE: "BOOLEAN" | "INT" >
+| <TYPE: "Fenetre" | "Menu" | "Caneva" | "Bouton">
+| <PROPTYPE: "Boolean" | "Bool"| "bool" |  "int">
+| <EVENT: "Click" | "Drag" | "EnterPress" | "Dbclick" | "NumKeyPress"| "Drop"| "ChrKeyPress">
 | < ID: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
+| <OP: "+" | "-">
+| <COND: <ID> ("=" | "<>") <ID>>
+| <AFFECT: <ID> ":=" <ID> (<OP> <ID>)* >
 }
 
 
@@ -171,6 +253,7 @@ void Input() :
   String[] Types = new String[5];
   int i = 0;
   String prop = "";
+  String ty = "";
 }
 
 {
@@ -181,17 +264,30 @@ void Input() :
   (
     {prop = "[ "; }
 
-    <KWCOMP> id = <ID> <KWTWOP> type = <TYPE> <KWPV>
+    <KWCOMP> id = <ID> <KWTWOP> type = <TYPE> ("(" <ID> ")")?<KWPV>
 
     <KWPROP>
-      ( p = <ID> <KWTWOP> (t = <PROPTYPE> | "{" t = <ID> (","<ID>)* "}" )  <KWPV>
-        {prop += p.image + ": "+ t.image +" ; ";}
+      ( p = <ID> {prop += p.image;}
+      
+      ( "," p=<ID> {prop += ", "+p.image;} )*  <KWTWOP>
+
+      (t = <PROPTYPE> {ty += t.image;} |
+
+      "{" t = <ID> {ty += "{" + t.image;} ("," t = <ID> {ty += "," + t.image;} )* "}" {ty+="}";} )  <KWPV>
+        {prop += ": "+ ty +"; ";}
+        {ty = "";}
       )*
+
     <KWEVT>
+    (<EVENT> ("("<ID>")")? "{" (<KWIF> <COND> <KWTHEN> <AFFECT> | <AFFECT> )* (<KWPV> <AFFECT> )* "}")*
     {prop += "]";}
     {Manager.Comps.put(id.image+" ("+type.image+")", prop);}
+    
+    {prop = "";}
   )*
 
+  <KWINIT>
+  (<ID> "::" <ID> ":=" <ID> ";")*
   <KWACT>
   A()
 
@@ -214,15 +310,17 @@ Automate A():
 Automate Event():
 {
   Automate a1;
-  Token id;
+  Token event;
+  Token comp;
   Manager m = new Manager();
 }
+
 {
   {a1=new Automate();}
   
-  id=<ID> "(" <ID> ")"
+  event=<EVENT> "(" comp=<ID> ")"
 
-  {m.add(a1.first.id , a1.last.id , id.image);}
+  {m.add(a1.first.id , a1.last.id , event.image, comp.image );}
 
   Y(a1)
   

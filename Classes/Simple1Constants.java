@@ -23,21 +23,33 @@ public interface Simple1Constants {
   /** RegularExpression Id. */
   int KWPROP = 11;
   /** RegularExpression Id. */
-  int KWTWOP = 12;
+  int KWIF = 12;
   /** RegularExpression Id. */
-  int KWPV = 13;
+  int KWTHEN = 13;
   /** RegularExpression Id. */
-  int KWEQU = 14;
+  int KWTWOP = 14;
   /** RegularExpression Id. */
-  int ALTERNATIVE = 15;
+  int KWPV = 15;
   /** RegularExpression Id. */
-  int CHOIX = 16;
+  int KWEQU = 16;
   /** RegularExpression Id. */
-  int TYPE = 17;
+  int ALTERNATIVE = 17;
   /** RegularExpression Id. */
-  int PROPTYPE = 18;
+  int CHOIX = 18;
   /** RegularExpression Id. */
-  int ID = 19;
+  int TYPE = 19;
+  /** RegularExpression Id. */
+  int PROPTYPE = 20;
+  /** RegularExpression Id. */
+  int EVENT = 21;
+  /** RegularExpression Id. */
+  int ID = 22;
+  /** RegularExpression Id. */
+  int OP = 23;
+  /** RegularExpression Id. */
+  int COND = 24;
+  /** RegularExpression Id. */
+  int AFFECT = 25;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -52,23 +64,31 @@ public interface Simple1Constants {
     "\"DEBUT\"",
     "\"INTERFACE\"",
     "\"COMP\"",
-    "\"INITIALISATION\"",
+    "\"INITIALISATIONS\"",
     "\"ACTIONS\"",
     "\"EVT\"",
     "\"PROP\"",
+    "<KWIF>",
+    "<KWTHEN>",
     "\":\"",
     "\";\"",
     "\"=\"",
     "\"+\"",
-    "\"$\"",
+    "\"~\"",
     "<TYPE>",
     "<PROPTYPE>",
+    "<EVENT>",
     "<ID>",
-    "\"{\"",
-    "\",\"",
-    "\"}\"",
+    "<OP>",
+    "<COND>",
+    "<AFFECT>",
     "\"(\"",
     "\")\"",
+    "\",\"",
+    "\"{\"",
+    "\"}\"",
+    "\"::\"",
+    "\":=\"",
     "\"a\"",
   };
 

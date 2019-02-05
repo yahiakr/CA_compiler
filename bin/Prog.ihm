@@ -1,16 +1,55 @@
 DEBUT
 INTERFACE
 
-COMP yahia : Menu ;
+COMP Fenp : Fenetre ;
 PROP
-    Visible : BOOLEAN ;
-    Nb : INT;
+    Position: {Agrd,Red,Ferm} ;
+    Visible : Boolean;
+    Xpos,Ypos: int;
 EVT
-COMP habib : Menu ;
+    Click {if position<>Ferm then position:=ferm}
+    Click {if position=Agrd then position:=Red}
+    Click {if position=Red then position:=Agrd}
+    Click {if Visible=False then position:=True}
+
+COMP MenuH : Menu ;
 PROP
-    Options : BOOLEAN ;
-    Nb : {AZZ,AZE,ZEF,GRD};
+    ItemChoisi:{Fichier,Commande,Designation,Information,Calcul,Option};
+    Actif,Visible:Boolean;
 EVT
+    Click(item){if Actif=True Then itemChoisi:=item}
+
+COMP Commande : Menu (Fenp) ;
+PROP
+    Option:{Projection,Distance};
+    deployer:Bool;
+EVT
+    Click(item){if Deployer=True Then option:=item}
+    EnterPress(item){if Deployer=True Then option:=item}
+
+COMP plan : Caneva ;
+PROP
+    NbreObjet:int;
+    ListObjet:{Aucun,Cercle,Point,Segment,Rectangle};
+    Actif:bool;
+EVT
+    Click{if Actif=True Then NbreObjet:=NbreObjet;ListObjet:=ListObjet}
+    Drag{if Actif=True Then ListObjet:=ListObjet;NbreObjet:=NbreObjet}
+
+COMP BtProjection : Bouton ;
+PROP
+    Etat:{Actif,Enfoncer};
+EVT
+    Click{if Etat=True Then Etat:=Enfoncer }
+
+COMP BtDistance : Bouton ;
+PROP
+    Etat:{Actif,Enfoncer};
+EVT
+    Click{if Etat=True Then Etat:=Enfoncer }
+
+INITIALISATIONS
+    yahia::Position := Agred ;
 
 ACTIONS
 {
@@ -21,12 +60,22 @@ ACTIONS
     {
         Dbclick(Plan);
         {
-            Click(plan);
-            Drag(plan)
+            Click(BtProjection)~
+            {
+                Click(Commande);
+                Click(Projection)
+            }
         }
     } +
     {
-        Click(plan);
-        Drag(plan)
+        Dbclick(Plan);
+        Dbclick(Plan);
+        {
+            Click(BtDistance)~
+            {
+                Click(Commande);
+                Click(Distance)
+            }
+        }
     }
 }
