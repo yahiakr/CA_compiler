@@ -1,2 +1,9 @@
-yahia (Menu): [ Visible: BOOLEAN ; Nb: INT ; ]
-habib (Menu): [ Options: BOOLEAN ; Nb: AZZ ; ]
+
+Composant (Type)          | Attributs                                                                                                                     |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+MenuH (Menu)              | ItemChoisi: {Fichier,Commande,Designation,Information,Calcul,Option}; Actif, Visible: Boolean; ]                              |
+plan (Caneva)             | NbreObjet: int; ListObjet: {Aucun,Cercle,Point,Segment,Rectangle}; Actif: bool; ]                                             |
+BtDistance (Bouton)       | Etat: {Actif,Enfoncer}; ]                                                                                                     |
+Fenp (Fenetre)            | Position: {Agrd,Red,Ferm}; Visible: Boolean; Xpos, Ypos: int; ]                                                               |
+Commande (Menu)           | Option: {Projection,Distance}; deployer: Bool; ]                                                                              |
+BtProjection (Bouton)     | Etat: {Actif,Enfoncer}; ]                                                                                                     |

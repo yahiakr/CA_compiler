@@ -1,0 +1,326 @@
+options {
+  STATIC = true;
+}
+
+PARSER_BEGIN(AFCOMPOSER)
+import java.io.* ;
+import java.util.* ;
+
+class Automate {
+  public Etat first;
+  public Etat last;
+  public Automate(){
+    this.first = new Etat();
+    this.last = new Etat();
+  }
+}
+
+class Etat {
+  public int id;
+  static int nb = 1;
+  public Etat(){
+    this.id = nb++;
+  }
+}
+
+class Transitions {
+  public HashMap<Integer, String> Transitions ;
+
+  public Transitions(){
+    this.Transitions = new HashMap<Integer, String>();
+  }
+}
+
+class Manager {
+  public static Transitions[][] transTab = new Transitions[150][8];
+  public static HashMap<String, String> components = new HashMap<String, String>();
+  public static HashMap<String, Integer> events = new HashMap<String, Integer>();
+  public static HashMap<Integer, String> revEvents = new HashMap<Integer, String>();
+
+  public void Init(){
+    for (int i = 0; i < 150; i++) {
+      for (int j = 0; j < 8; j++) {
+        this.transTab[i][j] = new Transitions();
+      }
+    }
+    events.put("Click",0);
+    events.put("Dbclick",1);
+    events.put("ChrKeyPress",2);
+    events.put("NumKeyPress",3);
+    events.put("EntrerKeyPress",4);
+    events.put("Drag",5);
+    events.put("Drop",6);
+
+    revEvents.put(0,"Click");
+    revEvents.put(1,"Dbclick");
+    revEvents.put(2,"ChrKeyPress");
+    revEvents.put(3,"NumKeyPress");
+    revEvents.put(4,"EntrerKeyPress");
+    revEvents.put(5,"Drag");
+    revEvents.put(6,"Drop");
+  }
+
+  public static String printTransitions(int i,int j){
+    String s="";
+    for (int key: transTab[i][j].Transitions.keySet()){
+      s+= "\t\t(" + transTab[i][j].Transitions.get(key).toString() + ")";
+      s+= " -> ";
+      s+= key + "\n";
+    }
+    return s;
+  }
+
+  public void add(int from,int to,String event,String on){
+    
+    int index = events.get(event);
+    this.transTab[from][index].Transitions.put(to,on);
+
+    this.transTab[from][7].Transitions.put(1,"");
+    this.transTab[to][7].Transitions.put(1,"");
+  }
+
+  public void update(int a,int b){
+
+    // copy
+    for (int i = 0; i < 7; i++) {
+      
+      for (int key: this.transTab[a][i].Transitions.keySet()){
+        String value = this.transTab[a][i].Transitions.get(key).toString();  
+        this.transTab[b][i].Transitions.put(key,value);
+      }
+    }
+    
+    // update
+    for (int i = 0; i < 150; i++) {
+      for (int j = 0; j < 7; j++) {
+
+        for (int key: this.transTab[i][j].Transitions.keySet()){
+          String value = this.transTab[i][j].Transitions.get(key).toString();  
+          if (key == a) {
+            this.transTab[i][j].Transitions.remove(a);
+            this.transTab[i][j].Transitions.put(b,value);
+          }
+        }
+
+      }
+    }
+
+    this.transTab[a][7].Transitions.remove(1);
+    this.transTab[a][7].Transitions.put(0,"");
+  }
+}
+
+
+class AFCOMPOSER {
+
+  
+  public static void main(String args[]) throws ParseException, FileNotFoundException {
+    
+    Manager m = new Manager();
+    m.Init();
+    
+    try {
+      AFCOMPOSER parser = new AFCOMPOSER(new FileInputStream("LOG.ihm"));
+      parser.Input();
+    } catch(FileNotFoundException ex){}
+
+    try {
+
+        PrintWriter pr = new PrintWriter("Automate.aef");
+        for (int i = 1; i < 150; i++) {
+          if (Manager.transTab[i][7].Transitions.get(1) != null) {
+            pr.println("\nEtat("+i+") : ");
+            for(int j=0;j<7;j++){
+              String s= Manager.revEvents.get(j);
+              if(Manager.printTransitions(i,j).equals("")==false){
+                pr.print("\t"+s+"\n");
+                pr.print(Manager.printTransitions(i,j));
+              }
+            }
+          }
+        }
+
+        pr.close();
+
+        pr = new PrintWriter("Composants.gui");
+
+        pr.printf("\n%-25s | %-125s |","Composant (Type)","Attributs");
+        pr.printf("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------");
+        for (String name: Manager.components.keySet()){
+          String key =name.toString();
+          String value = Manager.components.get(name).toString();  
+          //pr.println(key + ": " + value);  
+          pr.printf("\n%-25s | %-125s |",key,value,"|");
+          
+        }
+
+        pr.close();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        System.out.println("No such file exists.");
+    }
+
+    
+  }
+
+}
+
+PARSER_END(AFCOMPOSER)
+
+SKIP : { " " | "\t" | "\n" | "\r" }
+TOKEN :
+{
+  <KWDEBUT: "DEBUT">
+| <KWINTERFACE: "INTERFACE">
+| <KWCOMP: "COMP">
+| <KWPROP: "PROP">
+| <KWEVT: "EVT">
+| <KWINIT: "INITIALISATIONS">
+| <KWACTIONS: "ACTIONS">
+| <KWFIN: "FIN">
+
+| <KWIF: "If" | "if">
+| <KWTHEN: "Then" | "then">
+
+| <KWPV: ";">
+| <ALTERNATIVE: "+">
+| <CHOIX: "~">
+
+| <KWTWOP: ":">
+
+
+| <TYPE: "Fenetre" | "boiteDialogue" | "panel" | "Bouton" | "ChampsTexte" | "ComboBox" | "ListeDeroulante" | "CaseACochet"| "BoutonRadio"| "Icone"| "Menu"| "Caneva">
+| <PROPTYPE: "Boolean" | "Bool"| "bool" |  "int">
+| <EVENT: "Click" | "Dbclick"| "ChrKeyPress"| "NumKeyPress" | "EnterPress" | "Drag" | "Drop">
+| < ID: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
+| <OP: "+" | "-">
+| <COND: <ID> ("=" | "<>") <ID>>
+| <AFFECT: <ID> ":=" <ID> (<OP> <ID>)* >
+}
+
+
+void Input() :
+{
+  Token id, compType, p, t ;
+  String prop = "";
+  String propType = "";
+}
+
+{
+  <KWDEBUT>
+  <KWINTERFACE>
+
+  /** COMP */
+  (
+    <KWCOMP> id = <ID> <KWTWOP> compType = <TYPE> ("(" <ID> ")")?<KWPV>
+
+    <KWPROP>
+      ( p = <ID> {prop += p.image;}
+      ( "," p=<ID> {prop += ", "+p.image;} )*  <KWTWOP>
+
+      (t = <PROPTYPE> {propType += t.image;} |
+
+      "{" t = <ID> {propType += "{" + t.image;} ("," t = <ID> {propType += "," + t.image;} )* "}" {propType+="}";} )  <KWPV>
+        {prop += ": "+ propType +"; ";}
+        {propType = "";}
+      )*
+
+    <KWEVT>
+
+    (<EVENT> ("("<ID>")")? "{" (<<KWIF> <COND> <KWTHEN> <AFFECT> | <AFFECT>> ) 
+    (<KWPV> (<KWIF> <COND> <KWTHEN> <AFFECT> | <AFFECT>) )* "}")*
+    
+    {prop += "]";}
+    {Manager.components.put(id.image+" ("+compType.image+")", prop);}
+    
+    {prop = "";}
+  )*
+
+  <KWINIT>
+  (<ID> "::" <ID> ":=" <ID> ";")*
+  
+  <KWACTIONS>
+  A()
+  <KWFIN>
+
+  <EOF>
+}
+
+/** Actions section. */
+
+Automate A():
+{
+  Automate a;
+  Token id;
+}
+{
+  "{" a=A() "}" Y(a) {return a;}
+  | 
+  a = Event() {return a;}
+}
+
+Automate Event():
+{
+  Automate a1;
+  Token event;
+  Token comp;
+  Manager m = new Manager();
+}
+
+{
+  {a1=new Automate();}
+  
+  event=<EVENT> "(" comp=<ID> ")"
+
+  {m.add(a1.first.id , a1.last.id , event.image, comp.image );}
+
+  Y(a1)
+  
+  {return a1;}
+}
+
+void Y(Automate ag):
+{
+  Automate ad, tmp;
+  Manager m = new Manager();
+}
+
+{
+  <KWPV> ad=A()
+  {
+    m.update(ad.first.id , ag.last.id);
+
+    ag.last = ad.last;
+
+    tmp=new Automate();
+    tmp.first=ag.first;
+    tmp.last=ad.last;
+  }
+
+  Y(tmp)
+
+  | <CHOIX> ad=A()
+  {
+    m.update(ad.first.id,ag.first.id);
+    m.update(ad.last.id,ag.last.id);
+
+
+    tmp=new Automate();
+    tmp.first=ag.first;
+    tmp.last=ad.last;
+  }
+  Y(tmp) 
+
+  | <ALTERNATIVE> ad=A()
+  {
+    m.update(ad.first.id,ag.first.id);
+
+    tmp=new Automate(); 
+    tmp.first=ag.first;
+    
+  }
+  Y(tmp) 
+  | {}
+}
+
