@@ -1,39 +1,39 @@
 
 Etat(1) : 
 	Click
-		plan --> 2
+		(plan) -> 2
 
 Etat(2) : 
 	Drag
-		plan --> 4
+		(plan) -> 4
 
 Etat(4) : 
-	DbClick
-		Plan --> 22
-		Plan --> 8
+	Dbclick
+		(Plan) -> 22
+		(Plan) -> 8
 
 Etat(8) : 
 	Click
-		BtProjection --> 10
-		Commande --> 12
+		(BtProjection) -> 10
+		(Commande) -> 12
 
 Etat(10) : 
 
 Etat(12) : 
 	Click
-		Projection --> 10
+		(Projection) -> 10
 
 Etat(22) : 
-	DbClick
-		Plan --> 24
+	Dbclick
+		(Plan) -> 24
 
 Etat(24) : 
 	Click
-		BtDistance --> 26
-		Commande --> 28
+		(BtDistance) -> 26
+		(Commande) -> 28
 
 Etat(26) : 
 
 Etat(28) : 
 	Click
-		Distance --> 26
+		(Distance) -> 26
